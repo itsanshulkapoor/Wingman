@@ -60,7 +60,7 @@ class FlightQuery(BaseModel):
         if v:
             try:
                 date_obj = datetime.strptime(v, '%Y-%m-%d').date()
-                if date_obj < date.today().date():
+                if date_obj < date.today():
                     raise ValueError("Departure date cannot be in the past")
                 return v
             except ValueError as e:
@@ -105,7 +105,7 @@ class FlightQuery(BaseModel):
         return values
 
 class Airport(BaseModel):
-    iata_code: str = Field(..., description="The IATA code of the airport", regex=r'^[A-Z]{3}$')
+    iata_code: str = Field(..., description="The IATA code of the airport")
     icao_code: Optional[str] = Field(None, description="4-letter ICAO code")
     name: str = Field(..., description="Full airport name")
     city: str = Field(..., description="City name")
@@ -124,7 +124,10 @@ class Airport(BaseModel):
     @validator('iata_code')
     def validate_iata_code(cls, v):
         """validate the IATA code is formatted correctly"""
-        return v.upper().strip()
+        v = v.upper().strip()
+        if not re.match(r'^[A-Z]{3}$', v):
+            raise ValueError('IATA code must be exactly 3 uppercase letters')
+        return v
 
 class FlightSegment(BaseModel):
     """Individual flight journey segment"""
